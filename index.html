@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>yはxに比例 4択クイズ（整数・分数対応）</title>
+<style>
+  body { font-family: Arial; text-align: center; background-color: #f0f8ff; }
+  button { font-size: 20px; padding: 10px 20px; margin: 10px; cursor: pointer; }
+  #question { font-size: 24px; margin: 20px 0; }
+  #score { font-size: 20px; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<h1>yはxに比例 4択クイズ</h1>
+
+<div id="question"></div>
+<div id="choices"></div>
+<div id="score"></div>
+
+<script>
+let score = 0;
+let questionCount = 0;
+const totalQuestions = 5;
+let k, x0, y0;
+
+// 分数をランダムに生成する関数
+function randomFraction() {
+    let numerator = Math.floor(Math.random() * 9) - 4; // -4〜4
+    let denominator = Math.floor(Math.random() * 5) + 1; // 1〜5
+    if (numerator === 0) numerator = 1;
+    return `${numerator}/${denominator}`;
+}
+
+// 分数を数値に変換
+function fractionToNumber(frac) {
+    if (typeof frac === "number") return frac;
+    if (typeof frac === "string" && frac.includes("/")) {
+        let parts = frac.split('/');
+        return parseInt(parts[0])/parseInt(parts[1]);
+    }
+    return parseFloat(frac);
+}
+
+// 比例定数をランダム生成（整数または分数）
+function generateK() {
+    if (questionCount < 3) {
+        // 1問目〜3問目は整数
+        let val = 0;
+        while (val === 0) val = Math.floor(Math.random() * 11) - 5;
+        return val;
+    } else {
+        // 4問目〜5問目は整数か分数
+        if (Math.random() < 0.5) {
+            let val = 0;
+            while (val === 0) val = Math.floor(Math.random() * 11) - 5;
+            return val;
+        } else {
+            return randomFraction();
+        }
+    }
+}
+
+// k を表示用に変換
+function formatK(k) {
+    if (fractionToNumber(k) === 1) return "x";
+    if (fractionToNumber(k) === -1) return "-x";
+    if (typeof k === "string" && k === "1/1") return "x";
+    return `${k}x`;
+}
+
+function generateQuestion() {
+    x0 = Math.floor(Math.random() * 10) + 1;
+    k = generateK();
+    y0 = fractionToNumber(k) * x0;
+
+    document.getElementById("question").innerText = `yはxに比例する。x = ${x0}のとき、y = ${y0}。yをxの式で表せ。`;
+
+    // 選択肢作成
+    let choices = [k];
+    while (choices.length < 4) {
+        let option;
+        if (questionCount < 3) {
+            // 整数
+            let val = Math.round(fractionToNumber(k) + (Math.random() * 5 - 2));
+            if (val === 0) val = 1; // 0は避ける
+            option = val;
+        } else {
+            // 整数または分数
+            if (Math.random() < 0.5) {
+                let val = Math.round(fractionToNumber(k) + (Math.random() * 5 - 2));
+                if (val === 0) val = 1;
+                option = val;
+            } else {
+                option = randomFraction();
+            }
+        }
+        if (!choices.includes(option)) choices.push(option);
+    }
+
+    choices.sort(() => Math.random() - 0.5);
+
+    let choicesDiv = document.getElementById("choices");
+    choicesDiv.innerHTML = "";
+    choices.forEach(val => {
+        let btn = document.createElement("button");
+        btn.innerText = `y = ${formatK(val)}`;
+        btn.onclick = () => checkAnswer(val);
+        choicesDiv.appendChild(btn);
+    });
+}
+
+function checkAnswer(selected) {
+    if (fractionToNumber(selected) === fractionToNumber(k)) {
+        score++;
+        alert("正解！🎉");
+    } else {
+        alert(`不正解。正解は y = ${formatK(k)} です。`);
+    }
+    questionCount++;
+    if (questionCount < totalQuestions) {
+        generateQuestion();
+    } else {
+        document.getElementById("question").innerText = `終了！あなたの得点: ${score}/${totalQuestions}`;
+        document.getElementById("choices").innerHTML = "";
+    }
+    document.getElementById("score").innerText = `得点: ${score}`;
+}
+
+generateQuestion();
+</script>
+
+</body>
+</html>
